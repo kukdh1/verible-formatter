@@ -43,7 +43,29 @@ async function runFormatter(
       await vscode.workspace.fs.stat(uri)
     }
     catch (e) {
-      flagfile = undefined
+      // Find current workspace
+      let folder = vscode.workspace.getWorkspaceFolder(document.uri)
+      let failed = true
+
+      if (folder) {
+        // Find in current workspace
+        uri = vscode.Uri.joinPath(folder.uri, flagfile)
+
+        try {
+          await vscode.workspace.fs.stat(uri)
+
+          failed = false
+          flagfile = uri.fsPath
+        }
+        catch (e) {
+        }
+      }
+
+      if (failed) {
+        vscode.window.showWarningMessage(`Flagfile "${flagfile}" not found.`)
+
+        flagfile = undefined
+      }
     }
   }
 
