@@ -48,12 +48,8 @@
           "default": "verible-verilog-format"
         },
         "verible-formatter.flagFile": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "File name of (or absolute path to) verible-verilog-format flagfile.",
-          "default": null
+          "type": "string",
+          "description": "File name of (or absolute path to) verible-verilog-format flagfile."
         }
       }
     }
