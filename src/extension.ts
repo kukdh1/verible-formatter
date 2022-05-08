@@ -50,6 +50,9 @@ async function runFormatter(
   // Make options
   let params: Array<string> = []
 
+  // Make verilog-format emits error codes
+  params.push('--failsafe_success=false')
+
   if (flagfile) {
     params.push('--flagfile=' + flagfile)
   }
@@ -65,6 +68,11 @@ async function runFormatter(
   let proc = child_process.spawn(path, params, {
     env: process.env,
     stdio: 'pipe'
+  })
+
+  // Promise for wait until exit
+  let wait_exit = new Promise<number | null>((resolve, reject) => {
+    proc.on('exit', code => resolve(code))
   })
 
   // Encoding
@@ -95,7 +103,9 @@ async function runFormatter(
     return []
   }
 
-  if (proc.exitCode && proc.exitCode == 0) {
+  let exitCode = await wait_exit
+
+  if (exitCode != null && exitCode == 0) {
     return [
       vscode.TextEdit.replace(
         new vscode.Range(
@@ -107,10 +117,12 @@ async function runFormatter(
     ]
   }
   else {
-    vscode.window.showErrorMessage('Formatting failed with error:\n' + err.join())
+    vscode.window.showErrorMessage('Formatting failed')
+
+    console.log('Formatting failed with error (exit code=' + exitCode + ')\n' + err.join())
   }
 
-  return [] // TODO: fill this
+  return []
 }
 
 export function activate(context: vscode.ExtensionContext) {
