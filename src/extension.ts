@@ -1,3 +1,10 @@
+// SPDX-License-Identifier: MIT
+/*
+ * Copyright (C) 2022 Donghyun Gouk
+ *
+ * Author: Donghyun Gouk <kukdh1@gmail.com>
+ */
+
 import * as vscode from 'vscode';
 import * as which from 'which';
 import * as child_process from 'child_process'
