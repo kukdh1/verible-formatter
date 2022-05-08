@@ -1,4 +1,15 @@
 import * as vscode from 'vscode';
+import * as which from 'which';
+
+async function findFormatter(path: string): Promise<string | undefined> {
+  try {
+    return await which(path)
+  } catch (e) {
+    vscode.window.showErrorMessage(`Executable "${path}" not found.`)
+  }
+
+  return undefined
+}
 
 async function runFormatter(
   document: vscode.TextDocument,
