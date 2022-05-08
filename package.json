@@ -49,7 +49,7 @@
         },
         "verible-formatter.flagFile": {
           "type": "string",
-          "description": "File name of (or absolute path to) verible-verilog-format flagfile."
+          "description": "File name of (or path to) verible-verilog-format flagfile."
         }
       }
     }
