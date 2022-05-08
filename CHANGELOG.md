@@ -2,8 +2,6 @@
 
 All notable changes to the "verible-formatter" extension will be documented in this file.
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
-
-## [Unreleased]
+## [0.9.0]
 
 - Initial release
