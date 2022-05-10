@@ -15,3 +15,7 @@ This extension contributes the following settings:
 ### 0.9.0
 
 Initial release. Basic functionalities validated.
+
+### 1.0.0
+
+Fix bug in spawn output concatenation.
