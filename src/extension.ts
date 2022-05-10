@@ -141,7 +141,7 @@ async function runFormatter(
           document.lineAt(0).range.start,
           document.lineAt(document.lineCount - 1).range.end
         ),
-        out.join()
+        out.join('')
       )
     ]
   }
