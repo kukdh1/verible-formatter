@@ -7,7 +7,8 @@
 
 import * as vscode from 'vscode';
 import * as which from 'which';
-import * as child_process from 'child_process'
+import * as child_process from 'child_process';
+import path = require('path');
 
 const veribleRangeFormat = /(\d+):(\d+)(?:|:(\d+):(\d+)|-(\d+)):/;
 
@@ -76,6 +77,57 @@ function parseError(error: string): Error[] {
   return result
 }
 
+async function findFlagFile(flagfile: string, document_uri: vscode.Uri): Promise<string | undefined> {
+  let error = false
+  let uri = vscode.Uri.file(flagfile)
+
+  try {
+    await vscode.workspace.fs.stat(uri)
+  }
+  catch (e) {
+    error = true
+  }
+
+  if (!error) {
+    return uri.fsPath
+  }
+
+  // Find current directory
+  error = false
+
+  try {
+    let folder = path.dirname(document_uri.fsPath)
+
+    uri = vscode.Uri.joinPath(vscode.Uri.file(folder), flagfile)
+    await vscode.workspace.fs.stat(uri)
+  }
+  catch (e) {
+    error = true
+  }
+
+  if (!error) {
+    return uri.fsPath
+  }
+
+  // Find current workspace
+  try {
+    let folder = vscode.workspace.getWorkspaceFolder(document_uri)
+
+    if (folder) {
+      uri = vscode.Uri.joinPath(folder.uri, flagfile)
+
+      await vscode.workspace.fs.stat(uri)
+
+      return uri.fsPath
+    }
+  }
+  catch (e) {
+    error = true
+  }
+
+  return undefined
+}
+
 async function runFormatter(
   document: vscode.TextDocument,
   range?: vscode.Range,
@@ -101,34 +153,15 @@ async function runFormatter(
 
   // Find flagfile
   if (flagfile) {
-    let uri = vscode.Uri.file(flagfile)
+    let fspath = await findFlagFile(flagfile, document.uri)
 
-    try {
-      await vscode.workspace.fs.stat(uri)
+    if (fspath === undefined) {
+      vscode.window.showWarningMessage(`Flagfile "${flagfile}" not found.`)
+
+      flagfile = undefined
     }
-    catch (e) {
-      // Find current workspace
-      let folder = vscode.workspace.getWorkspaceFolder(document.uri)
-      let failed = true
-
-      if (folder) {
-        uri = vscode.Uri.joinPath(folder.uri, flagfile)
-
-        try {
-          await vscode.workspace.fs.stat(uri)
-
-          failed = false
-          flagfile = uri.fsPath
-        }
-        catch (e) {
-        }
-      }
-
-      if (failed) {
-        vscode.window.showWarningMessage(`Flagfile "${flagfile}" not found.`)
-
-        flagfile = undefined
-      }
+    else {
+      flagfile = fspath
     }
   }
 
