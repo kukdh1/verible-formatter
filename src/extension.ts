@@ -55,7 +55,6 @@ async function runFormatter(
       let failed = true
 
       if (folder) {
-        // Find in current workspace
         uri = vscode.Uri.joinPath(folder.uri, flagfile)
 
         try {
