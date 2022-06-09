@@ -9,6 +9,10 @@ import * as vscode from 'vscode';
 import * as which from 'which';
 import * as child_process from 'child_process'
 
+const veribleRangeFormat = /(\d+):(\d+)(?:|:(\d+):(\d+)|-(\d+)):/;
+
+let diagnosticCollection: vscode.DiagnosticCollection | null = null
+
 async function findFormatter(path: string): Promise<string | undefined> {
   try {
     return await which(path)
@@ -17,6 +21,59 @@ async function findFormatter(path: string): Promise<string | undefined> {
   }
 
   return undefined
+}
+
+type Error = {
+  range: vscode.Range;
+  message: string;
+}
+
+function parseError(error: string): Error[] {
+  let messages: string[] = error.split('\n')
+  let result: Error[] = []
+
+  messages.forEach((message: string) => {
+    message = message.trim()
+
+    // As we are feeding data from stdin, search for <stdin> to check ranges
+    let begin = message.indexOf('<stdin>:')
+
+    if (begin < 0) {
+      // Not matched
+      return
+    }
+
+    // Pop filename
+    message = message.substring(begin + 8) // 8 = '<stdin>:'.length
+
+    // Match range
+    let match = veribleRangeFormat.exec(message)
+
+    if (match === null) {
+      // Not matched
+      return
+    }
+    else {
+      let start_line: number = +match[1]
+      let start_char: number = +match[2]
+      let end_line: number = +match[3] || start_line
+      let end_char: number = +match[4] || +match[5] || start_char
+
+      message = message.substring(match[0].length + 1)  // Error message
+
+      result.push({
+        range: new vscode.Range(
+          start_line - 1,
+          start_char - 1,
+          end_line - 1,
+          end_char
+        ),
+        message: message,
+      })
+    }
+  })
+
+  return result
 }
 
 async function runFormatter(
@@ -134,6 +191,8 @@ async function runFormatter(
   let exitCode = await wait_exit
 
   if (exitCode != null && exitCode == 0) {
+    diagnosticCollection?.clear()
+
     return [
       vscode.TextEdit.replace(
         new vscode.Range(
@@ -145,9 +204,14 @@ async function runFormatter(
     ]
   }
   else {
-    vscode.window.showErrorMessage('Formatting failed')
+    let ranges = parseError(err.join())
+    let diagnostic = ranges.map(error => new vscode.Diagnostic(error.range, error.message, vscode.DiagnosticSeverity.Error))
 
-    console.log('Formatting failed with error (exit code=' + exitCode + ')\n' + err.join())
+    diagnosticCollection?.set(document.uri, diagnostic)
+
+    if (ranges.length == 0) {
+      vscode.window.showErrorMessage('Unexpected formatting error.')
+    }
   }
 
   return []
@@ -175,8 +239,13 @@ export function activate(context: vscode.ExtensionContext) {
     }
   })
 
+  diagnosticCollection = vscode.languages.createDiagnosticCollection('systemverilog')
+
   context.subscriptions.push(_formatter)
   context.subscriptions.push(_formatter_range)
 }
 
-export function deactivate() { }
+export function deactivate() {
+  diagnosticCollection?.dispose()
+  diagnosticCollection = null
+}
