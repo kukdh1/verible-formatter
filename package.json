@@ -3,7 +3,7 @@
   "displayName": "Verible Formatter",
   "description": "Format SystemVerilog and Verilog using Verible",
   "version": "1.0.0",
-  "publisher": "Donghyun Gouk",
+  "publisher": "kukdh1",
   "repository": {
     "type": "git",
     "url": "https://github.com/kukdh1/verible-formatter"
@@ -49,7 +49,7 @@
       "properties": {
         "verible-formatter.path": {
           "type": "string",
-          "description": "Path to verible-verilog-format binary.",
+          "description": "File name of (or path to) verible-verilog-format binary.",
           "default": "verible-verilog-format"
         },
         "verible-formatter.flagFile": {
