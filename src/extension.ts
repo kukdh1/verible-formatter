@@ -238,7 +238,7 @@ async function runFormatter(
   }
   else {
     let ranges = parseError(err.join())
-    let diagnostic = ranges.map(error => new vscode.Diagnostic(error.range, error.message, vscode.DiagnosticSeverity.Error))
+    let diagnostic = ranges.map(error => new vscode.Diagnostic(error.range, '[Verible Formatter] ' + error.message, vscode.DiagnosticSeverity.Error))
 
     diagnosticCollection?.set(document.uri, diagnostic)
 
