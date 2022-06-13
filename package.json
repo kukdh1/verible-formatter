@@ -2,7 +2,7 @@
   "name": "verible-formatter",
   "displayName": "Verible Formatter",
   "description": "Format SystemVerilog and Verilog using Verible",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "publisher": "kukdh1",
   "repository": {
     "type": "git",
