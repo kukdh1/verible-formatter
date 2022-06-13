@@ -13,6 +13,7 @@ import path = require('path');
 const veribleRangeFormat = /(\d+):(\d+)(?:|:(\d+):(\d+)|-(\d+)):/;
 
 let diagnosticCollection: vscode.DiagnosticCollection | null = null
+let outputChannel: vscode.OutputChannel | null = null
 
 async function findFormatter(path: string): Promise<string | undefined> {
   try {
@@ -237,13 +238,16 @@ async function runFormatter(
     ]
   }
   else {
-    let ranges = parseError(err.join())
+    let message = err.join()
+    let ranges = parseError(message)
     let diagnostic = ranges.map(error => new vscode.Diagnostic(error.range, '[Verible Formatter] ' + error.message, vscode.DiagnosticSeverity.Error))
 
     diagnosticCollection?.set(document.uri, diagnostic)
 
     if (ranges.length == 0) {
       vscode.window.showErrorMessage('Unexpected formatting error.')
+      outputChannel?.replace('Error messages from "verilog-verible-format":\n' + message)
+      outputChannel?.show(true)
     }
   }
 
@@ -251,8 +255,10 @@ async function runFormatter(
 }
 
 export function activate(context: vscode.ExtensionContext) {
+  const languageId = ['verilog', 'systemverilog']
+
   let _formatter = vscode.languages.registerDocumentFormattingEditProvider(
-    ['verilog', 'systemverilog'], {
+    languageId, {
     provideDocumentFormattingEdits(
       document: vscode.TextDocument
     ): vscode.ProviderResult<vscode.TextEdit[]> {
@@ -261,7 +267,7 @@ export function activate(context: vscode.ExtensionContext) {
   })
 
   let _formatter_range = vscode.languages.registerDocumentRangeFormattingEditProvider(
-    ['verilog', 'systemverilog'], {
+    languageId, {
     provideDocumentRangeFormattingEdits(
       document: vscode.TextDocument,
       range: vscode.Range,
@@ -273,6 +279,7 @@ export function activate(context: vscode.ExtensionContext) {
   })
 
   diagnosticCollection = vscode.languages.createDiagnosticCollection('systemverilog')
+  outputChannel = vscode.window.createOutputChannel('Verible Formatter', 'systemverilog')
 
   context.subscriptions.push(_formatter)
   context.subscriptions.push(_formatter_range)
@@ -281,4 +288,7 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {
   diagnosticCollection?.dispose()
   diagnosticCollection = null
+
+  outputChannel?.dispose()
+  outputChannel = null
 }
