@@ -79,35 +79,27 @@ function parseError(error: string): Error[] {
 }
 
 async function findFlagFile(flagfile: string, document_uri: vscode.Uri): Promise<string | undefined> {
-  let error = false
   let uri = vscode.Uri.file(flagfile)
 
   try {
     await vscode.workspace.fs.stat(uri)
+
+    return uri.fsPath
   }
   catch (e) {
-    error = true
-  }
-
-  if (!error) {
-    return uri.fsPath
   }
 
   // Find current directory
-  error = false
-
   try {
     let folder = path.dirname(document_uri.fsPath)
 
     uri = vscode.Uri.joinPath(vscode.Uri.file(folder), flagfile)
+
     await vscode.workspace.fs.stat(uri)
+
+    return uri.fsPath
   }
   catch (e) {
-    error = true
-  }
-
-  if (!error) {
-    return uri.fsPath
   }
 
   // Find current workspace
@@ -123,7 +115,32 @@ async function findFlagFile(flagfile: string, document_uri: vscode.Uri): Promise
     }
   }
   catch (e) {
-    error = true
+  }
+
+  // Find parent directories
+  {
+    let folder = path.dirname(document_uri.fsPath)
+    let lastFolder
+
+    while (true) {
+      // Go up
+      lastFolder = folder
+      folder = path.dirname(folder)
+
+      if (folder === lastFolder) {
+        break
+      }
+
+      // Check file exists
+      try {
+        uri = vscode.Uri.joinPath(vscode.Uri.file(folder), flagfile)
+
+        await vscode.workspace.fs.stat(uri)
+
+        return uri.fsPath
+      } catch (e) {
+      }
+    }
   }
 
   return undefined
