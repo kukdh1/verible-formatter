@@ -11,3 +11,7 @@
 ## [1.1.1] - 2022-06-14
 ### Added
  - Print error message to the `OUTPUT` tab vscode when unexpected formatting error.
+
+## [1.1.2] - 2023-07-27
+### Added
+ - Search `flagfile` recursively in the parent directories like `clang-format`.
